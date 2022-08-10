@@ -1,9 +1,13 @@
 import {BiSend} from 'react-icons/bi'
 import styled from 'styled-components';
-import { useContext, useState, useEffect } from 'react';
-import {newMessage,receiveMessage} from '../../../../context/Chat'
-import {AuthContext} from '../../../../context/Authtentication'
-import { serverTimestamp } from 'firebase/database';
+import {Navigate} from 'react-router-dom'
+import { useContext, useState, useEffect} from 'react';
+import { useCollection} from 'react-firebase-hooks/firestore'
+import { collection, limit, orderBy,query, serverTimestamp,doc, setDoc, addDoc} from 'firebase/firestore';
+import { db } from '../../../../services/Firebaseconfig';
+import Message from './Message';
+import { AuthContext } from '../../../../context/Authtentication';
+import Button from '../../../Button/Button';
 
 const Chatbox = styled.div`
     display:flex;
@@ -15,6 +19,10 @@ const Chatbox = styled.div`
         height:50vh;
         width:50vw;
         border-radius:30px;
+        overflow:auto;
+        &::-webkit-scrollbar{
+            display:none;
+        }
     }
     input{
         width:40vw;
@@ -46,31 +54,73 @@ const Chatbox = styled.div`
         font-weight:700;
         margin-bottom:20px;
     }
+
+    span a {
+        margin-left:30px;
+        text-decoration:none;
+        color:#FF5757;
+        font-size:1.5rem;
+    }
 `
 
-function Chat() {
-    const [token, setToken] = useState(sessionStorage.getItem("@Chat_token"))
-    const [message, setMessage] = useState(null)
-    const {name} = useContext(AuthContext)
+function Chat({token}) {
+    const [message, setMessage] = useState('')
+    //const[queryMessages, setQueryMessages] = useState()
+    const messageRef = collection(db,token)
+    
+    const{name} = useContext(AuthContext)
+
+    const queryMessages = query(messageRef,orderBy("createdAt"))
+
+    const [value, loading, error] = useCollection(queryMessages)
 
     useEffect(() => {
-       var messages = receiveMessage(token)
-       console.log(messages)
+        if(!doc(db, token,"enter")){setDoc(doc(db, token,"enter"), {
+            name:name,
+            message:`${name} entrou no chat!`,
+            createdAt:serverTimestamp()
+        });}
+        console.log(value)
+        
     }, [])
-    
 
-    function sendMessage(){
-        newMessage(name,message,token)
-        console.log(name+" - "+message+" - "+token + ' - ' + serverTimestamp)
+    useEffect(()=>{
+        const view = document.querySelector('.view')
+        view.scrollTop = view.scrollHeight
+    },[value])
+    
+   
+
+    async function sendMessage(e){
+        e.preventDefault()
+        await addDoc(messageRef, {
+            name:name,
+            message:message,
+            createdAt:serverTimestamp()
+        });
+        setMessage('')
     }
     return ( 
     <Chatbox>
-        <span>ID do chat: {token}</span>
-        <div className='view'></div>
-        <div className='send'>
-            <input type='text' onChange={(e)=>setMessage(e.target.value)}/>
+        <span>ID do chat: {token}<a href="/">Sair</a></span>
+        <div className='view'>
+        {error && <strong>Error: {JSON.stringify(error)}</strong>}
+        {loading && <span>Collection: Loading...</span>}
+        {value &&
+          <div>
+            {value.docs.map((doc) => (
+              <Message 
+              message={doc.data().message}
+              user={doc.data().name}
+              />
+            ))}
+          </div>
+        }
+        </div>
+        <form onSubmit={sendMessage}>
+            <input type='text' value={message} onChange={(e)=>setMessage(e.target.value)}/>
             <button onClick={sendMessage}><BiSend/></button>
-        </div>     
+        </form>     
     </Chatbox>
     );
 }

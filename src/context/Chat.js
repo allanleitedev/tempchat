@@ -1,35 +1,23 @@
-import {getDatabase,set,ref,push, serverTimestamp, onValue} from 'firebase/database'
-import{app} from '../services/Firebaseconfig'
+/*import {db} from '../services/Firebaseconfig'
+import {addDoc, collection,limit,orderBy,query} from 'firebase/firestore'
 
-const char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-const tamanho = 64
+const roomRef= collection(db ,'rooms')
 
-const db = getDatabase(app);
-
-export function newChat(){
-    var chatToken =''
-    for(var i=0;i<tamanho;i++){
-        chatToken += char[(Math.floor(Math.random() * char.length))]
-    }
-    set(ref(db,chatToken), {
-        theme:'generic',
+export async function newChat(){
+    const newRoom = await addDoc(roomRef,{
+        message:'teste',
+        uid:'teste',
+        profileimage:'url'
     })
-    console.log(chatToken)
-    return chatToken;
+    console.log('newRoom')
+    //return chatToken;
 }
 
 export function newMessage(user,message,token){
-    set(push(ref(db,token +'/messages'),{
-        date:serverTimestamp(),
-        user:user,
-        message:message
-    }))
+    
 }
 
 export function receiveMessage(token){
-    const starCountRef = ref(db, token);
-    onValue(starCountRef, (snapshot) => {
-    const data = snapshot.val();
-    return data
-});
-}
+    const roomRef = collection(db , token)
+    const queryMessages = query(roomRef, orderBy('createdAt',limit(25)))
+}*/

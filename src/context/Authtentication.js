@@ -1,9 +1,6 @@
 import { getAuth, createUserWithEmailAndPassword,GoogleAuthProvider, signInWithPopup,GithubAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
 import { useState,createContext } from "react";
 
-import {getDatabase,set,ref} from 'firebase/database'
-import{app} from '../services/Firebaseconfig'
-
 export const AuthContext = createContext({})
 
 export function AuthProvider({children}){
@@ -35,6 +32,7 @@ export function AuthProvider({children}){
           const user = userCredential.user
           console.log(userCredential)
           setUser(user)
+          console.log(user)
           setName(user.email)
           sessionStorage.setItem("@AuthFireBase:user", JSON.stringify(user))
           sessionStorage.setItem("@AuthFireBase:name", JSON.stringify(user.email))
@@ -52,6 +50,7 @@ export function AuthProvider({children}){
         const credential = GoogleAuthProvider.credentialFromResult(result)
         const user = result.user
         setUser(user)
+        console.log(user)
         setName(user.displayName)
         sessionStorage.setItem("@AuthFireBase:user", JSON.stringify(user))
         sessionStorage.setItem("@AuthFireBase:name", JSON.stringify(user.displayName))
@@ -76,19 +75,10 @@ export function AuthProvider({children}){
     setUser(null)
     setName(null)
   }
-function newChat(){
-    console.log('teste')
-    const db = getDatabase(app);
-  set(ref(db, 'users/' + 'userId'), {
-    username: 'name',
-    email: 'email',
-    profile_picture : 'imageUrl'
-  });
-    
-}
+
   
   return (
-      <AuthContext.Provider value={{signInGoogle,signInMail,logOut,createMail,newChat, signed: !!user,user,name}}>
+      <AuthContext.Provider value={{signInGoogle,signInMail,logOut,createMail, signed: !!user,user,name}}>
         {children}
       </AuthContext.Provider>
   )

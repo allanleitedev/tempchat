@@ -1,8 +1,7 @@
 import styled from 'styled-components'
 import Button from '../../../Button/Button'
-import {newChat} from '../../../../context/Chat'
 import {useState} from 'react'
-import {Navigate} from 'react-router-dom'
+import Chat from '../../Chat/Chat/Chat'
 
 const App = styled.div`
     display:flex;
@@ -32,34 +31,45 @@ const App = styled.div`
 `
 
 function Home() {
+    const [inputtoken, setInputtoken] = useState(null)
+    const [token, setToken] = useState(null)
 
-    const [chattoken, setChattoken] = useState(null)
+    function initChat(token){
 
-    function initChat(){
-        var token = newChat()
-        setChattoken(token)
-        sessionStorage.setItem("@Chat_token", token)
+        if(token === null){
+            const char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const tamanho = 32
+
+            var newToken =''
+            for(var i=0;i<tamanho;i++){
+            newToken += char[(Math.floor(Math.random() * char.length))]
+            }
+            setToken(newToken)
+        }else{
+            console.log(token)
+            setToken(token)
+        }
     }
     
-    if(!chattoken){
+    if(!token){
         return (
             <App>
                     <Button
-                    handle={initChat}
+                    handle={()=>initChat(null)}
                     text='Novo Chat'
                     cor='linear-gradient(30deg,#5DDC5B,#158C5B)'
                     ></Button>
                     <Button
-                    onclick=''
+                    handle={()=>initChat(inputtoken)}
                     text='Entre em um chat'
                     cor='linear-gradient(30deg,#5B96DC,#1552DC)'
                     />
-                    <input type='Text'></input>
+                    <input type='Text' onChange={(e)=>setInputtoken(e.target.value)}></input>
             </App>
         )
     }
 
-    return <Navigate to='/chat' replace/>
+    return <Chat token={token}/>
 }
 
 export default Home
